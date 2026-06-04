@@ -9,7 +9,8 @@
       "PowerShell(python --version)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(grep -iE \"\\\\.\\(env|pem|key|p12|pfx|cer|secret\\)$|secret|password|credential\")"
     ]
   }
 }
