@@ -8,6 +8,26 @@ import json
 import re
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import quiz_utils
+
+# Nº de descargas simultáneas. Más alto = más rápido pero más riesgo de bloqueo.
+MAX_WORKERS = 2
+
+# Campos del CSV de salida (orden fijo para escritura incremental coherente)
+CAMPOS_SALIDA = [
+    "Título", "Año", "Sinopsis", "Director(es)", "Duración",
+    "Géneros", "Reparto principal", "Nombre original", "Año original", "Enlace"
+]
+
+# User-Agent realista para reducir el riesgo de bloqueo
+HEADERS = {
+    'User-Agent': ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                   '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'),
+    'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+}
+
 
 def crear_sesion_reintentos():
     sesion = requests.Session()
@@ -24,6 +44,7 @@ def crear_sesion_reintentos():
 
 session = crear_sesion_reintentos()
 
+
 def resolver_redireccion(url):
     try:
         resp = session.head(url, allow_redirects=True, timeout=10)
@@ -32,73 +53,98 @@ def resolver_redireccion(url):
         print(f"❌ No se pudo resolver la URL: {url} - {e}")
         return None
 
-def extraer_datos_letterboxd(url):
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    try:
-        resp = session.get(url, headers=headers, timeout=30)
-        
-        # Añadimos esta comprobación para evitar errores con respuestas vacías
-        if not resp or not resp.text:
-            return None
 
-        if resp.status_code != 200:
+def _limpiar_duracion(texto):
+    """Extrae solo la duración en minutos, descartando 'More at IMDb', etc."""
+    if not texto:
+        return ""
+    match = re.search(r'(\d+)\s*mins?', texto)
+    return f"{match.group(1)} mins" if match else ""
+
+
+def _limpiar_año(valor):
+    """Devuelve solo los 4 dígitos del año, aunque venga como fecha completa."""
+    if not valor:
+        return ""
+    match = re.search(r'(\d{4})', str(valor))
+    return match.group(1) if match else ""
+
+
+def extraer_datos_letterboxd(url):
+    try:
+        resp = session.get(url, headers=HEADERS, timeout=30)
+
+        if not resp or not resp.text or resp.status_code != 200:
             return None
 
         soup = BeautifulSoup(resp.text, 'html.parser')
         datos = {}
 
-        datos["Título"] = soup.find("h1", class_="headline-1").text.strip() if soup.find("h1", class_="headline-1") else ""
+        h1 = soup.find("h1", class_="headline-1")
+        datos["Título"] = h1.text.strip() if h1 else ""
 
-        # Extraer año desde JSON-LD
+        # Año: 1) JSON-LD, 2) h1, 3) URL
         año = ""
         json_ld = soup.find("script", type="application/ld+json")
         if json_ld:
             try:
                 parsed = json.loads(json_ld.string)
-                año = str(parsed.get("datePublished", "")).strip()
+                año = _limpiar_año(parsed.get("datePublished", ""))
             except Exception:
                 pass
-
-        # Si falla, buscar en el h1
-        if not año:
-            h1 = soup.find("h1", class_="headline-1")
-            if h1:
-                match = re.search(r'\((\d{4})\)', h1.text)
-                if match:
-                    año = match.group(1)
-
-        # Último intento: buscar en la URL
-        if not año:
-            match = re.search(r'/(\d{4})/?$', url)
+        if not año and h1:
+            match = re.search(r'\((\d{4})\)', h1.text)
             if match:
                 año = match.group(1)
+        if not año:
+            año = _limpiar_año(re.search(r'/(\d{4})/?$', url).group(1)) if re.search(r'/(\d{4})/?$', url) else ""
 
         datos["Año"] = año
 
         sinopsis = soup.find("meta", {"name": "description"})
         datos["Sinopsis"] = sinopsis["content"].strip() if sinopsis else ""
-        director = soup.select_one('a[href*="/director/"]')
-        datos["Director(es)"] = director.text.strip() if director else ""
+
+        # Directores: todos, no solo el primero
+        directores = soup.select('a[href*="/director/"]')
+        nombres_dir = list(dict.fromkeys(d.text.strip() for d in directores if d.text.strip()))
+        datos["Director(es)"] = ", ".join(nombres_dir)
+
         detalles = soup.select_one(".text-link.text-footer")
-        datos["Duración"] = detalles.text.strip() if detalles else ""
+        datos["Duración"] = _limpiar_duracion(detalles.text if detalles else "")
+
         generos = soup.select('.text-sluglist a[href*="/films/genre/"]')
-        datos["Géneros"] = ", ".join([g.text.strip() for g in generos]) if generos else ""
+        datos["Géneros"] = ", ".join(g.text.strip() for g in generos) if generos else ""
+
         reparto = soup.select('a[href*="/actor/"]')[:3]
-        datos["Reparto principal"] = ", ".join([a.text.strip() for a in reparto]) if reparto else ""
+        datos["Reparto principal"] = ", ".join(a.text.strip() for a in reparto) if reparto else ""
 
         return datos
     except Exception as e:
         print(f"❌ Error extrayendo datos de {url} - {e}")
         return None
 
-def contar_lineas_csv(ruta_csv):
-    """Cuenta líneas de un CSV sin cargarlo completamente (más eficiente)."""
+
+def _cargar_titulos_existentes(salida_csv):
+    """Devuelve el set de 'Nombre original' ya presentes en el CSV de salida."""
+    existentes = set()
+    if not os.path.exists(salida_csv):
+        return existentes
     try:
-        with open(ruta_csv, 'r', encoding='utf-8') as f:
-            f.readline()  # saltar headers
-            return sum(1 for _ in f)
+        with open(salida_csv, 'r', encoding='utf-8', newline='') as f:
+            for row in csv.DictReader(f):
+                nombre = (row.get("Nombre original") or "").strip()
+                if nombre:
+                    existentes.add(nombre)
     except Exception:
-        return 0
+        pass
+    return existentes
+
+
+def _formatear_tiempo(segundos):
+    segundos = int(segundos)
+    m, s = divmod(segundos, 60)
+    return f"{m}m {s:02d}s" if m else f"{s}s"
+
 
 def elegir_csv_desde_directorio(directorio_entrada, directorio_salida):
     archivos = [f for f in os.listdir(directorio_entrada) if f.endswith('.csv')]
@@ -106,79 +152,141 @@ def elegir_csv_desde_directorio(directorio_entrada, directorio_salida):
         print("⚠️ No hay archivos CSV en la carpeta.")
         return None
 
-    print("\n📁 Listas disponibles:")
-    for i, archivo in enumerate(archivos):
+    # Clasificar cada lista en pendientes (sin importar o a medias) y completadas
+    pendientes, completadas = [], []
+    for archivo in archivos:
         ruta_csv = os.path.join(directorio_entrada, archivo)
-        num_lineas = contar_lineas_csv(ruta_csv)
-
+        num_lineas = quiz_utils.contar_lineas_csv(ruta_csv)
         nombre_base = os.path.splitext(archivo)[0]
         quiz_path = os.path.join(directorio_salida, f"{nombre_base}_quiz.csv")
-        extraido = os.path.exists(quiz_path)
-        estado = "[✓ EXTRAÍDO]" if extraido else ""
-        print(f"{i+1}) {archivo} ({num_lineas} películas) {estado}")
+        ya_hechas = len(_cargar_titulos_existentes(quiz_path)) if os.path.exists(quiz_path) else 0
+        info = {"archivo": archivo, "total": num_lineas, "hechas": ya_hechas}
+        if num_lineas > 0 and ya_hechas >= num_lineas:
+            completadas.append(info)
+        else:
+            pendientes.append(info)
+
+    # Numeración global continua a través de ambas secciones
+    orden = []  # lista de nombres de archivo en el orden mostrado
+
+    def _imprimir_seccion(titulo, items):
+        if not items:
+            return
+        print(f"\n{titulo}")
+        for info in items:
+            orden.append(info["archivo"])
+            n = len(orden)
+            if info["hechas"]:
+                estado = f"[✓ {info['hechas']}/{info['total']} extraídas]"
+            else:
+                estado = ""
+            print(f"{n}) {info['archivo']} ({info['total']} películas) {estado}")
+
+    _imprimir_seccion("📥 PENDIENTES DE IMPORTAR:", pendientes)
+    _imprimir_seccion("✅ YA IMPORTADAS:", completadas)
 
     while True:
-        eleccion = input("Elige un número: ").strip()
-        if eleccion.isdigit() and 1 <= int(eleccion) <= len(archivos):
-            return archivos[int(eleccion) - 1]
-        else:
-            print("❌ Opción no válida. Intenta de nuevo.")
+        eleccion = input("\nElige un número: ").strip()
+        if eleccion.isdigit() and 1 <= int(eleccion) <= len(orden):
+            return orden[int(eleccion) - 1]
+        print("❌ Opción no válida. Intenta de nuevo.")
+
+
+def _descargar_pelicula(row):
+    """
+    Tarea ejecutada en cada hilo: resuelve la URL y extrae los datos de una película.
+    Devuelve el dict de datos listo para escribir, o None si falla.
+    No escribe en disco (eso lo hace el hilo principal).
+    """
+    # Pequeña pausa con jitter para repartir la carga entre hilos
+    time.sleep(random.uniform(0.3, 1.2))
+
+    print(f"  → descargando: {row['Name']}")
+    url_real = resolver_redireccion(row['URL'])
+    if not url_real:
+        return None
+
+    datos = extraer_datos_letterboxd(url_real)
+    if not datos:
+        return None
+
+    datos["Nombre original"] = row['Name']
+    datos["Año original"] = row['Year']
+    datos["Enlace"] = url_real
+    if not datos.get("Año", "").strip():
+        datos["Año"] = _limpiar_año(row['Year'])
+    return datos
+
 
 def procesar_csv(nombre_archivo, carpeta_entrada="csv_lists", carpeta_salida="csv_quiz"):
     entrada_csv = os.path.join(carpeta_entrada, nombre_archivo)
     nombre_base = os.path.splitext(nombre_archivo)[0]
     salida_csv = os.path.join(carpeta_salida, f"{nombre_base}_quiz.csv")
 
-    # Optimización: usar csv estándar en lugar de pandas (más eficiente para lectura simple)
-    resultados = []
-    total = 0
-    
-    # Primero contar total de filas
     with open(entrada_csv, 'r', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        rows = list(reader)
-        total = len(rows)
+        rows = list(csv.DictReader(f))
+    total = len(rows)
 
-    for i, row in enumerate(rows, start=1):
-        print(f"[{i}/{total}] Procesando: {row['Name']}")
-        short_url = row['URL']
-        url_real = resolver_redireccion(short_url)
+    os.makedirs(carpeta_salida, exist_ok=True)
 
-        if not url_real:
-            continue
+    # Reanudación: saltar las que ya están en el CSV de salida
+    existentes = _cargar_titulos_existentes(salida_csv)
+    archivo_nuevo = not os.path.exists(salida_csv)
+    if existentes:
+        print(f"♻️  Reanudando: {len(existentes)} películas ya extraídas se saltarán.")
 
-        datos = extraer_datos_letterboxd(url_real)
-
-        if datos:
-            datos["Nombre original"] = row['Name']
-            datos["Año original"] = row['Year']
-            datos["Enlace"] = url_real
-
-            # Si no se pudo extraer el año, usar el del CSV original
-            if not datos.get("Año") or not datos["Año"].strip():
-                datos["Año"] = str(row['Year']).strip()
-
-            resultados.append(datos)
-        else:
-            print("⚠️ No se pudo obtener información.")
-
-        time.sleep(random.uniform(1.5, 2.5))
-
-    if not resultados:
-        print("❌ No se pudo generar el CSV de salida.")
+    pendientes = [r for r in rows if r['Name'].strip() not in existentes]
+    if not pendientes:
+        print("✅ Nada que hacer: todas las películas ya estaban extraídas.")
         return
 
-    # Escribir CSV usando csv estándar (más eficiente que pandas para este caso)
-    os.makedirs(carpeta_salida, exist_ok=True)
-    
-    # Determinar campos (usar los del primer resultado más los campos estándar)
-    if resultados:
-        campos = list(resultados[0].keys())
-        with open(salida_csv, 'w', encoding='utf-8', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=campos)
+    print(f"🚀 Procesando {len(pendientes)} películas con {MAX_WORKERS} descargas simultáneas...\n")
+
+    nuevas = 0
+    fallidas = 0
+    completadas = 0
+    tiempo_inicio = time.time()
+
+    # Un solo hilo escritor (el principal): seguro sin locks.
+    # Los hilos del pool solo descargan; aquí escribimos según van completando.
+    with open(salida_csv, 'a', encoding='utf-8', newline='') as f_out:
+        writer = csv.DictWriter(f_out, fieldnames=CAMPOS_SALIDA)
+        if archivo_nuevo:
             writer.writeheader()
-            writer.writerows(resultados)
-        print(f"\n✅ Archivo generado: {salida_csv}")
+
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futuros = {executor.submit(_descargar_pelicula, row): row for row in pendientes}
+
+            for futuro in as_completed(futuros):
+                row = futuros[futuro]
+                completadas += 1
+
+                # ETA según el ritmo real de esta sesión
+                ritmo = (time.time() - tiempo_inicio) / completadas
+                eta = _formatear_tiempo(ritmo * (len(pendientes) - completadas))
+
+                try:
+                    datos = futuro.result()
+                except Exception as e:
+                    datos = None
+                    print(f"❌ Error con {row['Name']}: {e}")
+
+                if datos:
+                    writer.writerow(datos)
+                    f_out.flush()  # guardado incremental inmediato
+                    nuevas += 1
+                    estado = "✅"
+                else:
+                    fallidas += 1
+                    estado = "⚠️"
+
+                print(f"[{completadas}/{len(pendientes)}] {estado} {row['Name']} (ETA ~{eta})")
+
+    print(f"\n✅ Terminado: {nuevas} nuevas, {fallidas} fallidas.")
+    print(f"📄 Archivo: {salida_csv}")
+    if fallidas:
+        print("💡 Vuelve a ejecutar para reintentar solo las que faltan.")
+
 
 if __name__ == "__main__":
     archivo_seleccionado = elegir_csv_desde_directorio("csv_lists", "csv_quiz")
