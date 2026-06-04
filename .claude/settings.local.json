@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"G:\\\\Mi unidad\\\\code\\\\python\\\\MoviesQuiz\" -Recurse -Force)",
+      "Bash(Select-Object FullName, PSIsContainer)",
+      "Bash(Sort-Object FullName)",
+      "PowerShell(Get-ChildItem -Path \"G:\\\\Mi unidad\\\\code\\\\python\\\\MoviesQuiz\" -File -Depth 1 | Where-Object { -not $_.PSIsContainer } | Select-Object Name, Length, LastWriteTime | Sort-Object Name)",
+      "PowerShell([System.IO.File]::ReadAllText\\(\"G:\\\\Mi unidad\\\\code\\\\python\\\\MoviesQuiz\\\\.gitignore\", [System.Text.Encoding]::UTF8\\))"
+    ]
+  }
+}
