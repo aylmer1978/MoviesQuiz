@@ -1,0 +1,133 @@
+:root {
+  --bg: #0b0b14;
+  --bg-soft: #15151f;
+  --bg-card: #1c1c2a;
+  --accent: #ff8000;        /* naranja Letterboxd */
+  --accent-2: #00b020;      /* verde Letterboxd */
+  --text: #e8e8ef;
+  --text-dim: #9a9ab0;
+  --ok: #2ecc71;
+  --err: #e74c3c;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  padding: 18px 16px;
+  text-align: center;
+  border-bottom: 1px solid #26263a;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+.topbar h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.5px; }
+
+#app {
+  flex: 1;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Pantallas */
+.screen { display: none; animation: fade 0.25s ease; }
+.screen.active { display: block; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.subtitle { color: var(--text-dim); margin-bottom: 14px; font-size: 0.95rem; }
+
+/* Lista de quizzes */
+.quiz-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.quiz-card {
+  background: var(--bg-card);
+  border: 1px solid #2a2a3e;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.quiz-card:active { transform: scale(0.98); }
+.quiz-card:hover { border-color: var(--accent); }
+.quiz-card .qc-name { font-weight: 600; font-size: 1.02rem; }
+.quiz-card .qc-meta { color: var(--text-dim); font-size: 0.82rem; margin-top: 3px; }
+.quiz-card .qc-record { font-size: 0.8rem; color: var(--accent); text-align: right; white-space: nowrap; }
+
+/* Juego */
+.game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.score { color: var(--text-dim); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.dataset-name { color: var(--accent); font-size: 0.85rem; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.question-box {
+  background: var(--bg-soft);
+  border-radius: var(--radius);
+  padding: 20px;
+  font-size: 1.15rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  min-height: 90px;
+  margin-bottom: 18px;
+}
+
+.options { display: flex; flex-direction: column; gap: 10px; }
+.option-btn {
+  background: var(--bg-card);
+  color: var(--text);
+  border: 2px solid #2a2a3e;
+  border-radius: var(--radius);
+  padding: 16px;
+  font-size: 1.05rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, transform 0.1s;
+}
+.option-btn:active { transform: scale(0.98); }
+.option-btn:hover:not(:disabled) { border-color: var(--accent); }
+.option-btn:disabled { cursor: default; opacity: 0.95; }
+.option-btn.correct { border-color: var(--ok); background: rgba(46, 204, 113, 0.15); }
+.option-btn.wrong { border-color: var(--err); background: rgba(231, 76, 60, 0.15); }
+
+.game-footer { margin-top: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 50px; }
+.feedback { font-size: 1rem; font-weight: 600; }
+.feedback.ok { color: var(--ok); }
+.feedback.err { color: var(--err); }
+
+/* Fin */
+#screen-end { text-align: center; padding-top: 30px; }
+#endTitle { font-size: 1.5rem; margin-bottom: 14px; }
+.end-score { font-size: 1.1rem; color: var(--text-dim); margin-bottom: 10px; }
+.end-record { margin: 18px 0; font-size: 1.05rem; }
+.name-entry { display: flex; flex-direction: column; gap: 10px; max-width: 320px; margin: 0 auto 18px; }
+#nameInput {
+  background: var(--bg-card); border: 2px solid #2a2a3e; border-radius: var(--radius);
+  padding: 14px; color: var(--text); font-size: 1rem; text-align: center;
+}
+
+/* Botones */
+.btn-primary {
+  background: var(--accent); color: #1a1a1a; border: none; border-radius: var(--radius);
+  padding: 14px 22px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: transform 0.1s, filter 0.1s;
+}
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-ghost {
+  background: transparent; color: var(--text-dim); border: none; font-size: 0.95rem; cursor: pointer; padding: 6px;
+}
+.btn-ghost:hover { color: var(--text); }
+
+.loading { color: var(--text-dim); text-align: center; padding: 30px; }

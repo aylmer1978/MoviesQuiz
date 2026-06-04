@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0b0b14">
+  <title>The Letterboxd Quiz</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1 id="appTitle">🎬 The Letterboxd Quiz</h1>
+  </header>
+
+  <main id="app">
+    <!-- Pantalla: selección de lista -->
+    <section id="screen-select" class="screen active">
+      <p class="subtitle">Elige una lista para jugar</p>
+      <ul id="quizList" class="quiz-list"></ul>
+    </section>
+
+    <!-- Pantalla: juego -->
+    <section id="screen-game" class="screen">
+      <div class="game-header">
+        <button id="btnBack" class="btn-ghost">← Salir</button>
+        <span id="scoreLabel" class="score">Aciertos: 0 · Errores: 0/3</span>
+      </div>
+      <div id="datasetName" class="dataset-name"></div>
+
+      <div id="questionBox" class="question-box"></div>
+      <div id="options" class="options"></div>
+
+      <div class="game-footer">
+        <span id="feedback" class="feedback"></span>
+        <button id="btnNext" class="btn-primary" hidden>Siguiente →</button>
+      </div>
+    </section>
+
+    <!-- Pantalla: fin de partida -->
+    <section id="screen-end" class="screen">
+      <h2 id="endTitle"></h2>
+      <p id="endScore" class="end-score"></p>
+      <div id="endRecord" class="end-record"></div>
+      <div id="nameEntry" class="name-entry" hidden>
+        <input id="nameInput" type="text" maxlength="40" placeholder="Tu nombre" autocomplete="off">
+        <button id="btnSaveRecord" class="btn-primary">Guardar récord</button>
+      </div>
+      <button id="btnPlayAgain" class="btn-primary">Volver a las listas</button>
+    </section>
+  </main>
+
+  <script src="js/quiz.js"></script>
+  <script src="js/records.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

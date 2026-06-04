@@ -1,0 +1,93 @@
+[
+  {
+    "id": "lovecraft",
+    "nombre": "LOVECRAFT",
+    "num_peliculas": 49,
+    "dificultad": "🟢 FÁCIL",
+    "archivo": "data/lovecraft.json"
+  },
+  {
+    "id": "classic-movies-for-beginners",
+    "nombre": "CLASSIC MOVIES FOR BEGINNERS",
+    "num_peliculas": 118,
+    "dificultad": "🟡 MEDIA",
+    "archivo": "data/classic-movies-for-beginners.json"
+  },
+  {
+    "id": "shudder-originals",
+    "nombre": "SHUDDER ORIGINALS",
+    "num_peliculas": 127,
+    "dificultad": "🟡 MEDIA",
+    "archivo": "data/shudder-originals.json"
+  },
+  {
+    "id": "vhs",
+    "nombre": "VHS",
+    "num_peliculas": 138,
+    "dificultad": "🟡 MEDIA",
+    "archivo": "data/vhs.json"
+  },
+  {
+    "id": "chick-flick",
+    "nombre": "CHICK FLICK",
+    "num_peliculas": 165,
+    "dificultad": "🔴 DIFÍCIL",
+    "archivo": "data/chick-flick.json"
+  },
+  {
+    "id": "late-90s-beginning-2000-horror-movies",
+    "nombre": "LATE 90S BEGINNING 2000 HORROR MOVIES",
+    "num_peliculas": 181,
+    "dificultad": "🔴 DIFÍCIL",
+    "archivo": "data/late-90s-beginning-2000-horror-movies.json"
+  },
+  {
+    "id": "full-moon",
+    "nombre": "FULL MOON",
+    "num_peliculas": 187,
+    "dificultad": "🔴 DIFÍCIL",
+    "archivo": "data/full-moon.json"
+  },
+  {
+    "id": "sitges-2024",
+    "nombre": "SITGES 2024",
+    "num_peliculas": 192,
+    "dificultad": "🔴 DIFÍCIL",
+    "archivo": "data/sitges-2024.json"
+  },
+  {
+    "id": "90s-horror",
+    "nombre": "90S HORROR",
+    "num_peliculas": 215,
+    "dificultad": "🔴 DIFÍCIL",
+    "archivo": "data/90s-horror.json"
+  },
+  {
+    "id": "slasher",
+    "nombre": "SLASHER",
+    "num_peliculas": 529,
+    "dificultad": "⚫ EXTREMA",
+    "archivo": "data/slasher.json"
+  },
+  {
+    "id": "found-footage",
+    "nombre": "FOUND FOOTAGE",
+    "num_peliculas": 538,
+    "dificultad": "⚫ EXTREMA",
+    "archivo": "data/found-footage.json"
+  },
+  {
+    "id": "horror-80s",
+    "nombre": "HORROR 80S",
+    "num_peliculas": 620,
+    "dificultad": "⚫ EXTREMA",
+    "archivo": "data/horror-80s.json"
+  },
+  {
+    "id": "direct-to-video-horror-cinema",
+    "nombre": "DIRECT TO VIDEO HORROR CINEMA",
+    "num_peliculas": 1516,
+    "dificultad": "⚫ EXTREMA",
+    "archivo": "data/direct-to-video-horror-cinema.json"
+  }
+]
