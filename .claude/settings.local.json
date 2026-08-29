@@ -10,7 +10,22 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
-      "Bash(grep -iE \"\\\\.\\(env|pem|key|p12|pfx|cer|secret\\)$|secret|password|credential\")"
+      "Bash(grep -iE \"\\\\.\\(env|pem|key|p12|pfx|cer|secret\\)$|secret|password|credential\")",
+      "Bash(pip show *)",
+      "Bash(pip install *)",
+      "Bash(python scratchpad/gen_excel.py)",
+      "Bash(python -c ' *)",
+      "Bash(python3 -c ' *)",
+      "Bash(python scratchpad/inspect_lecturas.py)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(timeout 90 python scratchpad/fill_expedient.py)",
+      "Bash(iconv -f utf-8 -t utf-8 -c /tmp_titles.txt)",
+      "Bash(cat /tmp_titles.txt)",
+      "Bash(grep -i '~\\\\$')",
+      "Bash(timeout 180 python scratchpad/write_expedient.py)",
+      "Bash(tasklist)",
+      "Bash(python scratchpad/write_expedient.py)",
+      "Bash(python scratchpad/gen_expedient_order.py)"
     ]
   }
 }
