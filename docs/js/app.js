@@ -45,12 +45,10 @@ async function cargarCatalogo() {
 async function renderCatalogo() {
   const lista = document.getElementById('quizList');
   lista.innerHTML = '';
+  const huecos = [];   // Dónde va el ranking de cada tarjeta, para rellenarlo después
+
+  // 1ª vuelta: dibujamos todas las tarjetas al instante, con los récords "cargando"
   for (const quiz of estado.catalogo) {
-    const top = await records.getTop(quiz.id);
-    // Una línea por puesto: medalla, puntos y nombre
-    const htmlRecords = top.length
-      ? top.map((r, i) => `<div class="qc-rec-linea">${MEDALLAS[i] || ''} ${r.puntos} · ${escapar(r.nombre)}</div>`).join('')
-      : '⛔ Sin récord';
     const li = document.createElement('li');
     li.className = 'quiz-card';
     li.innerHTML = `
@@ -58,10 +56,19 @@ async function renderCatalogo() {
         <div class="qc-name">${quiz.nombre}</div>
         <div class="qc-meta">${quiz.num_peliculas} películas · ${quiz.dificultad}</div>
       </div>
-      <div class="qc-record">${htmlRecords}</div>
-      `;
+      <div class="qc-record">⏳ Cargando…</div>
+    `;
     li.addEventListener('click', () => empezarQuiz(quiz));
     lista.appendChild(li);
+    huecos.push({ quiz, div: li.querySelector('.qc-record') });
+  }
+
+  // 2ª vuelta: cuando Google responde, rellenamos el ranking de cada tarjeta
+  for (const { quiz, div } of huecos) {
+    const top = await records.getTop(quiz.id);
+    div.innerHTML = top.length
+      ? top.map((r, i) => `<div class="qc-rec-linea">${MEDALLAS[i] || ''} ${r.puntos} · ${escapar(r.nombre)}</div>`).join('')
+      : '⛔ Sin récord';
   }
 }
 
