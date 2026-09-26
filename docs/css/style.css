@@ -145,3 +145,21 @@ body {
 .ranking { list-style: none; margin: 14px auto 0; max-width: 320px; display: flex; flex-direction: column; gap: 8px; }
 .ranking li { background: var(--bg-card); border-radius: var(--radius); padding: 10px 14px; text-align: left; }
 .ranking-vacio { color: var(--text-dim); margin-top: 10px; }
+
+/* Pantalla de lista */
+.list-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;             /* Siempre proporción 16:9, sea cual sea el ancho de pantalla */
+  background: #000;                 /* Negro mientras no haya imagen */
+  background-size: cover;           /* Cuando haya imagen, llenará el recuadro sin deformarse */
+  background-position: center;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+.list-name { font-size: 1.4rem; margin-bottom: 4px; }
+.list-meta { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 12px; }
+.list-desc { line-height: 1.5; margin-bottom: 20px; }
+.list-desc:empty { display: none; }  /* Si aún no hay descripción, no ocupa espacio */
+.list-subtitle { font-size: 1rem; color: var(--accent); margin-bottom: 4px; }
+.list-ranking .ranking { max-width: none; margin-left: 0; }
+.list-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }

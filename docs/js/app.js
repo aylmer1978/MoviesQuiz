@@ -36,18 +36,16 @@ async function cargarCatalogo() {
     const res = await fetch('data/index.json');
     estado.catalogo = await res.json();
     await renderCatalogo();
+    records.cargarTodo();   // Pedimos los récords a Google en segundo plano, sin esperar
   } catch (e) {
     lista.innerHTML = '<li class="loading">No se pudo cargar el catálogo.</li>';
     console.error(e);
   }
 }
 
-async function renderCatalogo() {
+function renderCatalogo() {
   const lista = document.getElementById('quizList');
   lista.innerHTML = '';
-  const huecos = [];   // Dónde va el ranking de cada tarjeta, para rellenarlo después
-
-  // 1ª vuelta: dibujamos todas las tarjetas al instante, con los récords "cargando"
   for (const quiz of estado.catalogo) {
     const li = document.createElement('li');
     li.className = 'quiz-card';
@@ -56,19 +54,9 @@ async function renderCatalogo() {
         <div class="qc-name">${quiz.nombre}</div>
         <div class="qc-meta">${quiz.num_peliculas} películas · ${quiz.dificultad}</div>
       </div>
-      <div class="qc-record">⏳ Cargando…</div>
     `;
-    li.addEventListener('click', () => empezarQuiz(quiz));
+    li.addEventListener('click', () => mostrarLista(quiz));   // Ahora abre la pantalla de la lista
     lista.appendChild(li);
-    huecos.push({ quiz, div: li.querySelector('.qc-record') });
-  }
-
-  // 2ª vuelta: cuando Google responde, rellenamos el ranking de cada tarjeta
-  for (const { quiz, div } of huecos) {
-    const top = await records.getTop(quiz.id);
-    div.innerHTML = top.length
-      ? top.map((r, i) => `<div class="qc-rec-linea">${MEDALLAS[i] || ''} ${r.puntos} · ${escapar(r.nombre)}</div>`).join('')
-      : '⛔ Sin récord';
   }
 }
 
@@ -76,6 +64,27 @@ function escapar(s) {
   const d = document.createElement('div');
   d.textContent = s;
   return d.innerHTML;
+}
+
+// --- Pantalla de lista ---
+async function mostrarLista(quiz) {
+  estado.quizActual = quiz;
+
+  // Rellenamos los datos de la lista elegida
+  document.getElementById('listName').textContent = quiz.nombre;
+  document.getElementById('listMeta').textContent = `${quiz.num_peliculas} películas · ${quiz.dificultad}`;
+  document.getElementById('listDesc').textContent = quiz.descripcion || '';   // Vacío hasta que haya descripciones
+
+  const rankingDiv = document.getElementById('listRanking');
+  rankingDiv.textContent = '⏳ Cargando…';
+  mostrarPantalla('screen-list');
+
+  // El ranking llega de Google (normalmente ya estará en memoria)
+  const top = await records.getTop(quiz.id);
+
+  // Si mientras esperábamos el jugador ha cambiado de lista, no pintamos nada
+  if (estado.quizActual !== quiz) return;
+  rankingDiv.innerHTML = htmlRanking(top);
 }
 
 // --- Inicio de un quiz ---
@@ -265,6 +274,8 @@ async function finalizar() {
 
 // --- Eventos globales ---
 document.getElementById('btnNext').addEventListener('click', siguientePregunta);
+document.getElementById('btnPlay').addEventListener('click', () => empezarQuiz(estado.quizActual));
+document.getElementById('btnListBack').addEventListener('click', () => mostrarPantalla('screen-select'));
 document.getElementById('btnBack').addEventListener('click', () => {
   // Si ya ha respondido alguna pregunta, pedimos confirmación antes de salir
   if (estado.aciertos + estado.errores > 0) {
