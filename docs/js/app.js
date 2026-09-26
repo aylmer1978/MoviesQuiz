@@ -181,7 +181,15 @@ async function finalizar() {
 
 // --- Eventos globales ---
 document.getElementById('btnNext').addEventListener('click', siguientePregunta);
-document.getElementById('btnBack').addEventListener('click', () => { renderCatalogo(); mostrarPantalla('screen-select'); });
+document.getElementById('btnBack').addEventListener('click', () => {
+  // Si ya ha respondido alguna pregunta, pedimos confirmación antes de salir
+  if (estado.aciertos + estado.errores > 0) {
+    const salir = confirm('¿Seguro que quieres salir? Perderás la partida en curso.');
+    if (!salir) return;  // Ha pulsado Cancelar: seguimos jugando
+  }
+  renderCatalogo();
+  mostrarPantalla('screen-select');
+});
 document.getElementById('btnPlayAgain').addEventListener('click', () => { renderCatalogo(); mostrarPantalla('screen-select'); });
 document.getElementById('btnSaveRecord').addEventListener('click', async () => {
   const nombre = document.getElementById('nameInput').value;
