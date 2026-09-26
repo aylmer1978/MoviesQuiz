@@ -35,17 +35,19 @@ async function cargarCatalogo() {
   try {
     const res = await fetch('data/index.json');
     estado.catalogo = await res.json();
-    await renderCatalogo();
-    records.cargarTodo();   // Pedimos los récords a Google en segundo plano, sin esperar
+    renderCatalogo();   // Dibuja las tarjetas al instante y rellena los récords cuando llegan
   } catch (e) {
     lista.innerHTML = '<li class="loading">No se pudo cargar el catálogo.</li>';
     console.error(e);
   }
 }
 
-function renderCatalogo() {
+async function renderCatalogo() {
   const lista = document.getElementById('quizList');
   lista.innerHTML = '';
+  const huecos = [];   // Dónde va el mejor récord de cada tarjeta, para rellenarlo después
+
+  // 1ª vuelta: dibujamos todas las tarjetas al instante
   for (const quiz of estado.catalogo) {
     const li = document.createElement('li');
     li.className = 'quiz-card';
@@ -54,9 +56,19 @@ function renderCatalogo() {
         <div class="qc-name">${quiz.nombre}</div>
         <div class="qc-meta">${quiz.num_peliculas} películas · ${quiz.dificultad}</div>
       </div>
+      <div class="qc-record">⏳</div>
     `;
-    li.addEventListener('click', () => mostrarLista(quiz));   // Ahora abre la pantalla de la lista
+    li.addEventListener('click', () => mostrarLista(quiz));
     lista.appendChild(li);
+    huecos.push({ quiz, div: li.querySelector('.qc-record') });
+  }
+
+  // 2ª vuelta: cuando llegan los récords de Google, ponemos el mejor de cada lista
+  for (const { quiz, div } of huecos) {
+    const top = await records.getTop(quiz.id);
+    div.textContent = top.length
+      ? `🥇 ${top[0].nombre} · ${top[0].puntos}`
+      : '✨ ¡Sé el primero!';
   }
 }
 
@@ -276,7 +288,12 @@ async function finalizar() {
 // --- Eventos globales ---
 document.getElementById('btnNext').addEventListener('click', siguientePregunta);
 document.getElementById('btnPlay').addEventListener('click', () => empezarQuiz(estado.quizActual));
-document.getElementById('btnListBack').addEventListener('click', () => mostrarPantalla('screen-select'));
+
+document.getElementById('btnListBack').addEventListener('click', () => {
+  renderCatalogo();                 // Redibuja con los récords al día
+  mostrarPantalla('screen-select');
+});
+
 document.getElementById('btnBack').addEventListener('click', () => {
   // Si ya ha respondido alguna pregunta, pedimos confirmación antes de salir
   if (estado.aciertos + estado.errores > 0) {
