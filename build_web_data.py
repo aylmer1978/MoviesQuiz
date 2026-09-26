@@ -16,6 +16,7 @@ import quiz_utils
 
 CARPETA_CSV = "csv_quiz"
 CARPETA_SALIDA = os.path.join("docs", "data")
+CARPETA_DESCRIPCIONES = "descripciones"
 
 # Mapeo de columnas del CSV (con acentos) a claves JSON simples (ascii, cómodas en JS)
 CAMPOS = {
@@ -35,6 +36,13 @@ def quiz_id(nombre_archivo):
     base = os.path.splitext(nombre_archivo)[0]
     return base.replace("_quiz", "")
 
+def leer_descripcion(qid):
+    """Devuelve el texto de descripciones/<id>.txt, o "" si esa lista aún no tiene."""
+    ruta = os.path.join(CARPETA_DESCRIPCIONES, f"{qid}.txt")
+    if not os.path.exists(ruta):
+        return ""
+    with open(ruta, "r", encoding="utf-8") as f:
+        return f.read().strip()
 
 def convertir_csv(ruta_csv):
     peliculas = []
@@ -70,6 +78,7 @@ def main():
             "nombre": engine.nombre_amigable(archivo),
             "num_peliculas": num,
             "dificultad": engine.calcular_dificultad(num),
+            "descripcion": leer_descripcion(qid),
             "archivo": f"data/{qid}.json",
         })
         print(f"✅ {archivo} → {qid}.json ({num} películas)")

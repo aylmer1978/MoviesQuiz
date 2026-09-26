@@ -72,7 +72,7 @@ async function mostrarLista(quiz) {
 
   // Rellenamos los datos de la lista elegida
   document.getElementById('listName').textContent = quiz.nombre;
-    // Imagen de la lista: docs/img/<id>.webp (si no existe, se queda el fondo negro)
+  // Imagen de la lista: docs/img/<id>.webp (si no existe, se queda el fondo negro)
   document.getElementById('listImage').style.backgroundImage = `url('img/${quiz.id}.webp')`;
   document.getElementById('listMeta').textContent = `${quiz.num_peliculas} películas · ${quiz.dificultad}`;
   document.getElementById('listDesc').textContent = quiz.descripcion || '';   // Vacío hasta que haya descripciones
