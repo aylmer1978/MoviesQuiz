@@ -74,6 +74,8 @@ class RemoteRecordStore {
 
   // Envía un récord nuevo. OJO: sin cabecera 'Content-Type' a propósito,
   // porque los scripts de Google rechazan las peticiones que la llevan.
+    // Envía un récord nuevo. OJO: sin cabecera 'Content-Type' a propósito,
+  // porque los scripts de Google rechazan las peticiones que la llevan.
   async save(quizId, nombre, puntos) {
     try {
       const res = await fetch(this.url, {
@@ -81,11 +83,14 @@ class RemoteRecordStore {
         body: JSON.stringify({ lista: quizId, nombre, puntos }),
       });
       const datos = await res.json();
-      if (datos.ok) this.cache = datos.records;   // Ranking actualizado que devuelve el script
       return datos.ok;
     } catch (e) {
       console.error('No se pudo guardar el récord', e);
       return false;
+    } finally {
+      // Pase lo que pase, olvidamos la memoria:
+      // la próxima consulta traerá el ranking actualizado desde Google
+      this.refrescar();
     }
   }
 }
