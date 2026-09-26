@@ -237,7 +237,6 @@ function tiempoAgotado() {
 function htmlRanking(top) {
   // Convierte [{nombre, puntos}, ...] en una lista HTML con medallas
   if (!top.length) return '<p class="ranking-vacio">Aún no hay récords en esta lista.</p>';
-  const medallas = ['🥇', '🥈', '🥉'];
   const filas = top.map((r, i) => `<li>${MEDALLAS[i] || ''} ${escapar(r.nombre)} · ${r.puntos} pts</li>`);
   return `<ol class="ranking">${filas.join('')}</ol>`;
 }
@@ -284,9 +283,9 @@ document.getElementById('btnBack').addEventListener('click', () => {
   }
   pararTemporizador();
   renderCatalogo();
-  mostrarPantalla('screen-select');
+  mostrarLista(estado.quizActual);   // Volvemos a la pantalla de la lista en la que estábamos
 });
-document.getElementById('btnPlayAgain').addEventListener('click', () => { renderCatalogo(); mostrarPantalla('screen-select'); });
+document.getElementById('btnPlayAgain').addEventListener('click', () => mostrarLista(estado.quizActual));
 document.getElementById('btnSaveRecord').addEventListener('click', async () => {
   const btn = document.getElementById('btnSaveRecord');
   const recordDiv = document.getElementById('endRecord');

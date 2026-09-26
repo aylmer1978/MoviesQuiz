@@ -66,9 +66,6 @@ body {
 .quiz-card:hover { border-color: var(--accent); }
 .quiz-card .qc-name { font-weight: 600; font-size: 1.02rem; }
 .quiz-card .qc-meta { color: var(--text-dim); font-size: 0.82rem; margin-top: 3px; }
-.quiz-card .qc-record { font-size: 0.8rem; color: var(--accent); text-align: right; white-space: nowrap; }
-.quiz-card .qc-record { max-width: 45%; }
-.quiz-card .qc-rec-linea { overflow: hidden; text-overflow: ellipsis; }
 
 /* Juego */
 .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
