@@ -107,9 +107,9 @@ function siguientePregunta() {
   let pregunta = null;
   while (estado.disponibles.length && !pregunta) {
     const peli = estado.disponibles.pop();
-    if (estado.usadas.has(peli.titulo)) continue;
+    if (estado.usadas.has(peli.enlace)) continue;
     pregunta = generarPregunta(peli, estado.peliculas, estado.cache);
-    if (pregunta) estado.usadas.add(peli.titulo);
+    if (pregunta) estado.usadas.add(peli.enlace);
   }
 
   if (!pregunta) return finalizar();
