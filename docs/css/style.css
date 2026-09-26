@@ -131,3 +131,10 @@ body {
 .btn-ghost:hover { color: var(--text); }
 
 .loading { color: var(--text-dim); text-align: center; padding: 30px; }
+
+/* Temporizador */
+.timer { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.timer-track { flex: 1; height: 8px; background: #2a2a3e; border-radius: 4px; overflow: hidden; }
+.timer-bar { height: 100%; width: 100%; background: var(--accent); transition: width 0.1s linear; }
+.timer-bar.urgente { background: var(--err); }
+.timer-text { min-width: 2ch; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }

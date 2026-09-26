@@ -4,6 +4,8 @@
  */
 
 const MAX_ERRORES = 3;
+const TIEMPO_NORMAL = 10;    // Segundos para responder la mayoría de preguntas
+const TIEMPO_SINOPSIS = 20;  // Segundos para las de sinopsis, que hay que leer
 
 const estado = {
   catalogo: [],
@@ -15,6 +17,7 @@ const estado = {
   aciertos: 0,
   errores: 0,
   preguntaActual: null,
+  temporizador: null,   // El setInterval en marcha, para poder pararlo
 };
 
 // --- Utilidades de pantalla ---
@@ -95,6 +98,35 @@ function actualizarMarcador() {
     `Aciertos: ${estado.aciertos} · Errores: ${estado.errores}/${MAX_ERRORES}`;
 }
 
+// --- Temporizador ---
+function iniciarTemporizador(segundos) {
+  pararTemporizador();                        // Por si quedaba alguno en marcha
+  const total = segundos * 1000;              // Duración en milisegundos
+  const fin = Date.now() + total;             // Momento exacto en que se acaba el tiempo
+  const barra = document.getElementById('timerBar');
+  const texto = document.getElementById('timerText');
+
+  function actualizar() {
+    const restante = Math.max(0, fin - Date.now());       // Milisegundos que quedan (nunca negativo)
+    barra.style.width = (restante / total) * 100 + '%';   // La barra, en porcentaje
+    texto.textContent = Math.ceil(restante / 1000);       // El número, en segundos enteros
+    barra.classList.toggle('urgente', restante <= 5000);  // Roja en los últimos 5 segundos
+
+    if (restante === 0) {
+      pararTemporizador();
+      tiempoAgotado();
+    }
+  }
+
+  actualizar();                                    // Pintamos el primer estado al instante
+  estado.temporizador = setInterval(actualizar, 100);  // Y luego cada 100 ms
+}
+
+function pararTemporizador() {
+  clearInterval(estado.temporizador);
+  estado.temporizador = null;
+}
+
 // --- Bucle de preguntas ---
 function siguientePregunta() {
   document.getElementById('feedback').textContent = '';
@@ -126,10 +158,15 @@ function siguientePregunta() {
     btn.addEventListener('click', () => responder(opcion, btn));
     cont.appendChild(btn);
   });
+
+  // Arrancamos el reloj: más tiempo si es de sinopsis
+  const segundos = pregunta.tipo === 'sinopsis' ? TIEMPO_SINOPSIS : TIEMPO_NORMAL;
+  iniciarTemporizador(segundos);
 }
 
 function responder(seleccion, btn) {
   if (!estado.preguntaActual) return;
+    pararTemporizador();
   const correcta = estado.preguntaActual.correcta;
   const acierto = seleccion.trim().toLowerCase() === correcta.trim().toLowerCase();
 
@@ -150,6 +187,26 @@ function responder(seleccion, btn) {
     feedback.textContent = `❌ Era: ${correcta}`;
     feedback.className = 'feedback err';
   }
+  actualizarMarcador();
+  document.getElementById('btnNext').hidden = false;
+}
+
+function tiempoAgotado() {
+  if (!estado.preguntaActual) return;
+  const correcta = estado.preguntaActual.correcta;
+
+  // Deshabilitar todos los botones y marcar la respuesta correcta en verde
+  document.querySelectorAll('.option-btn').forEach(b => {
+    b.disabled = true;
+    if (b.textContent.trim().toLowerCase() === correcta.trim().toLowerCase()) b.classList.add('correct');
+  });
+
+  // Cuenta como un error
+  estado.errores++;
+  const feedback = document.getElementById('feedback');
+  feedback.textContent = `⏰ ¡Tiempo! Era: ${correcta}`;
+  feedback.className = 'feedback err';
+
   actualizarMarcador();
   document.getElementById('btnNext').hidden = false;
 }
@@ -187,6 +244,7 @@ document.getElementById('btnBack').addEventListener('click', () => {
     const salir = confirm('¿Seguro que quieres salir? Perderás la partida en curso.');
     if (!salir) return;  // Ha pulsado Cancelar: seguimos jugando
   }
+  pararTemporizador();
   renderCatalogo();
   mostrarPantalla('screen-select');
 });
