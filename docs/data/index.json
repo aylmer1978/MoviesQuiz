@@ -20,7 +20,7 @@
     "nombre": "SHUDDER ORIGINALS",
     "num_peliculas": 127,
     "dificultad": "🟡 MEDIA",
-    "descripcion": "",
+    "descripcion": "Explora las películas originales de Shudder.",
     "archivo": "data/shudder-originals.json"
   },
   {
