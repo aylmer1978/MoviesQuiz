@@ -138,3 +138,8 @@ body {
 .timer-bar { height: 100%; width: 100%; background: var(--accent); transition: width 0.1s linear; }
 .timer-bar.urgente { background: var(--err); }
 .timer-text { min-width: 2ch; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Ranking de récords */
+.ranking { list-style: none; margin: 14px auto 0; max-width: 320px; display: flex; flex-direction: column; gap: 8px; }
+.ranking li { background: var(--bg-card); border-radius: var(--radius); padding: 10px 14px; text-align: left; }
+.ranking-vacio { color: var(--text-dim); margin-top: 10px; }

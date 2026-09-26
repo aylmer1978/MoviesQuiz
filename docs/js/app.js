@@ -6,6 +6,7 @@
 const MAX_ERRORES = 3;
 const TIEMPO_NORMAL = 10;    // Segundos para responder la mayoría de preguntas
 const TIEMPO_SINOPSIS = 20;  // Segundos para las de sinopsis, que hay que leer
+const TOP_RECORDS = 3;       // Puestos del ranking (igual que MAX_POR_LISTA en el script de Google)
 
 const estado = {
   catalogo: [],
@@ -212,6 +213,14 @@ function tiempoAgotado() {
 }
 
 // --- Fin de partida ---
+function htmlRanking(top) {
+  // Convierte [{nombre, puntos}, ...] en una lista HTML con medallas
+  if (!top.length) return '<p class="ranking-vacio">Aún no hay récords en esta lista.</p>';
+  const medallas = ['🥇', '🥈', '🥉'];
+  const filas = top.map((r, i) => `<li>${medallas[i] || ''} ${escapar(r.nombre)} · ${r.puntos} pts</li>`);
+  return `<ol class="ranking">${filas.join('')}</ol>`;
+}
+
 async function finalizar() {
   mostrarPantalla('screen-end');
   const total = estado.aciertos;
@@ -219,20 +228,26 @@ async function finalizar() {
     estado.errores >= MAX_ERRORES ? '💀 Fin del juego' : '🏁 ¡Lista completada!';
   document.getElementById('endScore').textContent = `Aciertos totales: ${total}`;
 
-  const record = await records.get(estado.quizActual.id);
   const recordDiv = document.getElementById('endRecord');
   const nameEntry = document.getElementById('nameEntry');
-  const esNuevoRecord = !record || total > record.puntos;
+  nameEntry.hidden = true;
+  recordDiv.textContent = 'Cargando récords…';
 
-  if (esNuevoRecord && total > 0) {
-    recordDiv.innerHTML = '🏆 <strong>¡Nuevo récord!</strong>';
+  // Pedimos el ranking fresco: alguien puede haber batido un récord mientras jugabas
+  records.refrescar();
+  const top = await records.getTop(estado.quizActual.id);
+
+  // Entra en el top si tiene al menos 1 acierto y hay un puesto libre o supera al último
+  const hayHueco = top.length < TOP_RECORDS;
+  const superaAlUltimo = top.length > 0 && total > top[top.length - 1].puntos;
+  const entraEnTop = total > 0 && (hayHueco || superaAlUltimo);
+
+  if (entraEnTop) {
+    recordDiv.innerHTML = `🏆 <strong>¡Entras en el top ${TOP_RECORDS}!</strong>` + htmlRanking(top);
+    document.getElementById('nameInput').value = '';
     nameEntry.hidden = false;
-    document.getElementById('nameInput').value = record ? record.nombre : '';
   } else {
-    recordDiv.innerHTML = record
-      ? `🥇 Récord actual: ${record.puntos} pts (${escapar(record.nombre)})`
-      : 'Sin récord todavía.';
-    nameEntry.hidden = true;
+    recordDiv.innerHTML = htmlRanking(top);
   }
 }
 
@@ -250,10 +265,19 @@ document.getElementById('btnBack').addEventListener('click', () => {
 });
 document.getElementById('btnPlayAgain').addEventListener('click', () => { renderCatalogo(); mostrarPantalla('screen-select'); });
 document.getElementById('btnSaveRecord').addEventListener('click', async () => {
+  const btn = document.getElementById('btnSaveRecord');
+  const recordDiv = document.getElementById('endRecord');
   const nombre = document.getElementById('nameInput').value;
-  await records.save(estado.quizActual.id, nombre, estado.aciertos);
+
+  btn.disabled = true;                   // Evita guardar dos veces con un doble toque
+  recordDiv.textContent = 'Guardando…';
+
+  const ok = await records.save(estado.quizActual.id, nombre, estado.aciertos);
+  const top = await records.getTop(estado.quizActual.id);   // Ranking ya actualizado
+
   document.getElementById('nameEntry').hidden = true;
-  document.getElementById('endRecord').innerHTML = '✅ ¡Récord guardado!';
+  recordDiv.innerHTML = (ok ? '✅ ¡Récord guardado!' : '⚠️ No se pudo confirmar el guardado') + htmlRanking(top);
+  btn.disabled = false;
 });
 
 // Arranque
