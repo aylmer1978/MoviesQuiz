@@ -34,26 +34,61 @@ class LocalRecordStore {
   }
 }
 
-/*
- * Para activar récords online en el futuro, crea una clase con la misma interfaz:
- *
- * class RemoteRecordStore {
- *   constructor(baseUrl) { this.baseUrl = baseUrl; }
- *   async get(quizId) {
- *     const r = await fetch(`${this.baseUrl}/records/${quizId}`);
- *     return r.ok ? r.json() : null;
- *   }
- *   async save(quizId, nombre, puntos) {
- *     await fetch(`${this.baseUrl}/records/${quizId}`, {
- *       method: 'POST',
- *       headers: { 'Content-Type': 'application/json' },
- *       body: JSON.stringify({ nombre, puntos }),
- *     });
- *   }
- * }
- *
- * Y en app.js cambiar:  const records = new RemoteRecordStore('https://...');
- */
+// Récords compartidos en Google Sheets (a través de un script de Google)
+class RemoteRecordStore {
+  constructor(url) {
+    this.url = url;
+    this.cache = null;   // Aquí guardamos los récords de todas las listas tras la primera petición
+  }
+
+  // Pide los récords de todas las listas (solo la primera vez; luego usa la memoria)
+  async cargarTodo() {
+    if (!this.cache) {
+      try {
+        const res = await fetch(this.url);
+        this.cache = await res.json();
+      } catch (e) {
+        console.error('No se pudieron cargar los récords', e);
+        return {};   // Sin conexión: seguimos sin récords (y se reintentará la próxima vez)
+      }
+    }
+    return this.cache;
+  }
+
+  // Olvida la memoria para que la próxima consulta traiga datos frescos
+  refrescar() {
+    this.cache = null;
+  }
+
+  // Los 5 mejores de una lista: [{nombre, puntos}, ...] (vacío si no hay ninguno)
+  async getTop(quizId) {
+    const todo = await this.cargarTodo();
+    return todo[quizId] || [];
+  }
+
+  // El mejor de una lista, o null. Mantiene funcionando el app.js actual.
+  async get(quizId) {
+    const top = await this.getTop(quizId);
+    return top.length ? top[0] : null;
+  }
+
+  // Envía un récord nuevo. OJO: sin cabecera 'Content-Type' a propósito,
+  // porque los scripts de Google rechazan las peticiones que la llevan.
+  async save(quizId, nombre, puntos) {
+    try {
+      const res = await fetch(this.url, {
+        method: 'POST',
+        body: JSON.stringify({ lista: quizId, nombre, puntos }),
+      });
+      const datos = await res.json();
+      if (datos.ok) this.cache = datos.records;   // Ranking actualizado que devuelve el script
+      return datos.ok;
+    } catch (e) {
+      console.error('No se pudo guardar el récord', e);
+      return false;
+    }
+  }
+}
 
 // Implementación activa actualmente:
-const records = new LocalRecordStore();
+const records = new RemoteRecordStore('https://script.google.com/macros/s/AKfycbwSNWqBvnaQQddr6CaVtRyuYmWuts3D_D8toJcbGCCf6ZfxaBCPnzC1p7ie2mz_UQa7/exec');
