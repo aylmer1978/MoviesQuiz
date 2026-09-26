@@ -7,6 +7,7 @@ const MAX_ERRORES = 3;
 const TIEMPO_NORMAL = 10;    // Segundos para responder la mayoría de preguntas
 const TIEMPO_SINOPSIS = 20;  // Segundos para las de sinopsis, que hay que leer
 const TOP_RECORDS = 3;       // Puestos del ranking (igual que MAX_POR_LISTA en el script de Google)
+const MEDALLAS = ['🥇', '🥈', '🥉'];
 
 const estado = {
   catalogo: [],
@@ -45,7 +46,11 @@ async function renderCatalogo() {
   const lista = document.getElementById('quizList');
   lista.innerHTML = '';
   for (const quiz of estado.catalogo) {
-    const record = await records.get(quiz.id);
+    const top = await records.getTop(quiz.id);
+    // Una línea por puesto: medalla, puntos y nombre
+    const htmlRecords = top.length
+      ? top.map((r, i) => `<div class="qc-rec-linea">${MEDALLAS[i] || ''} ${r.puntos} · ${escapar(r.nombre)}</div>`).join('')
+      : '⛔ Sin récord';
     const li = document.createElement('li');
     li.className = 'quiz-card';
     li.innerHTML = `
@@ -53,8 +58,8 @@ async function renderCatalogo() {
         <div class="qc-name">${quiz.nombre}</div>
         <div class="qc-meta">${quiz.num_peliculas} películas · ${quiz.dificultad}</div>
       </div>
-      <div class="qc-record">${record ? `🥇 ${record.puntos} pts<br>${escapar(record.nombre)}` : '⛔ Sin récord'}</div>
-    `;
+      <div class="qc-record">${htmlRecords}</div>
+      `;
     li.addEventListener('click', () => empezarQuiz(quiz));
     lista.appendChild(li);
   }
@@ -217,7 +222,7 @@ function htmlRanking(top) {
   // Convierte [{nombre, puntos}, ...] en una lista HTML con medallas
   if (!top.length) return '<p class="ranking-vacio">Aún no hay récords en esta lista.</p>';
   const medallas = ['🥇', '🥈', '🥉'];
-  const filas = top.map((r, i) => `<li>${medallas[i] || ''} ${escapar(r.nombre)} · ${r.puntos} pts</li>`);
+  const filas = top.map((r, i) => `<li>${MEDALLAS[i] || ''} ${escapar(r.nombre)} · ${r.puntos} pts</li>`);
   return `<ol class="ranking">${filas.join('')}</ol>`;
 }
 
