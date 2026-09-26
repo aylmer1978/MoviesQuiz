@@ -97,7 +97,7 @@ def extraer_datos_letterboxd(url):
             if match:
                 año = match.group(1)
         if not año:
-            año = _limpiar_año(re.search(r'/(\d{4})/?$', url).group(1)) if re.search(r'/(\d{4})/?$', url) else ""
+            año = _limpiar_año(re.search(r'-(\d{4})/?$', url).group(1)) if re.search(r'-(\d{4})/?$', url) else ""
 
         datos["Año"] = año
 
