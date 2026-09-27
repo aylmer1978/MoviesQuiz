@@ -12,7 +12,7 @@
     "nombre": "CLASSIC MOVIES FOR BEGINNERS",
     "num_peliculas": 118,
     "dificultad": "🟡 MEDIA",
-    "descripcion": "",
+    "descripcion": "La lista que emocionó a Garci.",
     "archivo": "data/classic-movies-for-beginners.json"
   },
   {
@@ -36,7 +36,7 @@
     "nombre": "CHICK FLICK",
     "num_peliculas": 165,
     "dificultad": "🔴 DIFÍCIL",
-    "descripcion": "",
+    "descripcion": "¡Demuestra que eres la mayor experta en chick flicks con esta lista infernal!",
     "archivo": "data/chick-flick.json"
   },
   {
@@ -68,7 +68,7 @@
     "nombre": "90S HORROR",
     "num_peliculas": 215,
     "dificultad": "🔴 DIFÍCIL",
-    "descripcion": "",
+    "descripcion": "El mejor de cine de terror de toda la historia es el de los 90. Y aquí tienes todas las películas.",
     "archivo": "data/90s-horror.json"
   },
   {
