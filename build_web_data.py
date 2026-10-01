@@ -18,6 +18,7 @@ CARPETA_CSV = "csv_quiz"
 CARPETA_SALIDA = os.path.join("docs", "data")
 CARPETA_DESCRIPCIONES = "descripciones"
 ARCHIVO_PUBLICAS = "listas_publicas.txt"
+CARPETA_LISTAS = "csv_lists"
 
 # Mapeo de columnas del CSV (con acentos) a claves JSON simples (ascii, cómodas en JS)
 CAMPOS = {
@@ -50,10 +51,24 @@ def leer_publicas():
     with open(ARCHIVO_PUBLICAS, "r", encoding="utf-8") as f:
         return {linea.strip() for linea in f if linea.strip()}
 
-def convertir_csv(ruta_csv):
+def claves_de_lista(qid):
+    """Devuelve el conjunto (título, año) de las películas que hay ahora en la lista, o None si no existe."""
+    ruta = os.path.join(CARPETA_LISTAS, f"{qid}.csv")
+    if not os.path.exists(ruta):
+        return None
+    with open(ruta, "r", encoding="utf-8") as f:
+        return {((r["Name"] or "").strip(), (r["Year"] or "").strip()) for r in csv.DictReader(f)}
+
+def convertir_csv(ruta_csv, claves=None):
+    """Convierte un CSV de quiz en una lista de películas.
+    Si se pasan 'claves', solo incluye las películas que siguen en la lista de Letterboxd."""
     peliculas = []
     with open(ruta_csv, "r", encoding="utf-8", newline="") as f:
         for row in csv.DictReader(f):
+            if claves is not None:
+                clave = ((row.get("Nombre original") or "").strip(), (row.get("Año original") or "").strip())
+                if clave not in claves:
+                    continue   # Película que ya no está en la lista: no se publica
             peli = {clave_json: (row.get(col) or "").strip() for col, clave_json in CAMPOS.items()}
             # Solo incluir pelis con al menos título
             if peli["titulo"]:
@@ -85,7 +100,7 @@ def main():
             continue
 
         ruta = os.path.join(CARPETA_CSV, archivo)
-        peliculas = convertir_csv(ruta)
+        peliculas = convertir_csv(ruta, claves_de_lista(qid))
         if not peliculas:
             print(f"⏭  {archivo}: sin películas válidas, omitido.")
             continue
