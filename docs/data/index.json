@@ -28,7 +28,7 @@
     "nombre": "VHS",
     "num_peliculas": 138,
     "dificultad": "🟡 MEDIA",
-    "descripcion": "",
+    "descripcion": "Una lista con aroma a la densa humedad del videoclub de tu barrio. Intenta recordar todas las películas que te sacaron de las drojas.",
     "archivo": "data/vhs.json"
   },
   {
