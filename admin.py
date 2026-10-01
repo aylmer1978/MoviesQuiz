@@ -8,10 +8,12 @@ Uso:
 
 import csv
 import os
+import build_web_data
 
 CARPETA_LISTAS = "csv_lists"
 CARPETA_QUIZ = "csv_quiz"
 ARCHIVO_PUBLICAS = "listas_publicas.txt"
+CARPETA_IMAGENES = os.path.join("docs", "img")
 
 
 # --- Listas públicas ---
@@ -58,7 +60,16 @@ def mostrar_listas(ids, publicas):
         hechas, total = progreso(qid)
         estado = "✅ pública" if qid in publicas else "🚫 oculta "
         aviso = "" if hechas == total else f"   ⚠️ incompleta ({hechas}/{total})"
-        print(f"{n:2}) {estado}   {qid}{aviso}")
+
+        # Qué contenido le falta todavía
+        falta = []
+        if not build_web_data.leer_descripcion(qid):
+            falta.append("descripción")
+        if not os.path.exists(os.path.join(CARPETA_IMAGENES, f"{qid}.webp")):
+            falta.append("imagen")
+        tareas = f"   ✏️ falta {' y '.join(falta)}" if falta else ""
+
+        print(f"{n:2}) {estado}   {qid}{aviso}{tareas}")
 
 
 def cambiar_visibilidad(qid, publicas):
@@ -82,25 +93,34 @@ def cambiar_visibilidad(qid, publicas):
     publicas.add(qid)
     print(f"✅ {qid} ahora es pública")
 
-
 def main():
     # Todas las listas que existen: las de csv_lists, que es donde empieza cada una
     ids = sorted(os.path.splitext(f)[0] for f in os.listdir(CARPETA_LISTAS) if f.endswith(".csv"))
     publicas = leer_publicas()
+    sin_generar = False   # ¿Hay cambios de visibilidad que aún no se han aplicado al juego?
 
     while True:
         mostrar_listas(ids, publicas)
-        eleccion = input("\nNúmero para mostrar/ocultar una lista, o S para salir: ").strip().lower()
+        eleccion = input("\nNúmero para mostrar/ocultar · G para generar los datos · S para salir: ").strip().lower()
 
         if eleccion == "s":
+            if sin_generar:
+                respuesta = input("Tienes cambios sin aplicar. ¿Generar los datos ahora? (s/n): ")
+                if respuesta.strip().lower() == "s":
+                    build_web_data.main()
             break
-        if eleccion.isdigit() and 1 <= int(eleccion) <= len(ids):
+        elif eleccion == "g":
+            print()
+            build_web_data.main()
+            sin_generar = False
+        elif eleccion.isdigit() and 1 <= int(eleccion) <= len(ids):
             cambiar_visibilidad(ids[int(eleccion) - 1], publicas)
             guardar_publicas(publicas)   # Guardamos en cada cambio, por si cierras de golpe
+            sin_generar = True
         else:
             print("❌ Opción no válida")
 
-    print("\n👋 Recuerda: los cambios se aplican al juego cuando generes los datos (python3 build_web_data.py).")
+    print("\n👋 ¡Hasta la próxima!")
 
 
 if __name__ == "__main__":
