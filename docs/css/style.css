@@ -23,7 +23,7 @@ body {
 }
 
 .topbar {
-  padding: 18px 16px;
+  padding: 10px 16px;
   text-align: center;
   border-bottom: 1px solid #26263a;
   position: sticky;
@@ -32,6 +32,7 @@ body {
   z-index: 10;
 }
 .topbar h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.5px; }
+.topbar .logo { display: block; height: 64px; width: auto; margin: 0 auto; }
 
 #app {
   flex: 1;
