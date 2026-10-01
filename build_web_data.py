@@ -17,6 +17,7 @@ import quiz_utils
 CARPETA_CSV = "csv_quiz"
 CARPETA_SALIDA = os.path.join("docs", "data")
 CARPETA_DESCRIPCIONES = "descripciones"
+ARCHIVO_PUBLICAS = "listas_publicas.txt"
 
 # Mapeo de columnas del CSV (con acentos) a claves JSON simples (ascii, cómodas en JS)
 CAMPOS = {
@@ -44,6 +45,11 @@ def leer_descripcion(qid):
     with open(ruta, "r", encoding="utf-8") as f:
         return f.read().strip()
 
+def leer_publicas():
+    """Devuelve el conjunto de ids de las listas marcadas como públicas."""
+    with open(ARCHIVO_PUBLICAS, "r", encoding="utf-8") as f:
+        return {linea.strip() for linea in f if linea.strip()}
+
 def convertir_csv(ruta_csv):
     peliculas = []
     with open(ruta_csv, "r", encoding="utf-8", newline="") as f:
@@ -56,18 +62,34 @@ def convertir_csv(ruta_csv):
 
 
 def main():
+    # Sin el archivo de listas públicas no seguimos: publicaríamos un juego vacío
+    if not os.path.exists(ARCHIVO_PUBLICAS):
+        print(f"❌ No existe {ARCHIVO_PUBLICAS}. Créalo con los ids de las listas públicas.")
+        return
+    publicas = leer_publicas()
+
     os.makedirs(CARPETA_SALIDA, exist_ok=True)
+
+    # Borramos los JSON anteriores: así, si ocultas una lista, desaparece también de la web
+    for viejo in os.listdir(CARPETA_SALIDA):
+        if viejo.endswith(".json"):
+            os.remove(os.path.join(CARPETA_SALIDA, viejo))
+
     archivos = sorted(f for f in os.listdir(CARPETA_CSV) if f.endswith(".csv"))
 
     indice = []
     for archivo in archivos:
+        qid = quiz_id(archivo)
+        if qid not in publicas:
+            print(f"🚫 {archivo}: oculta, no se publica")
+            continue
+
         ruta = os.path.join(CARPETA_CSV, archivo)
         peliculas = convertir_csv(ruta)
         if not peliculas:
             print(f"⏭  {archivo}: sin películas válidas, omitido.")
             continue
 
-        qid = quiz_id(archivo)
         salida = os.path.join(CARPETA_SALIDA, f"{qid}.json")
         with open(salida, "w", encoding="utf-8") as f:
             json.dump(peliculas, f, ensure_ascii=False)

@@ -13,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import quiz_utils
 
 # Nº de descargas simultáneas. Más alto = más rápido pero más riesgo de bloqueo.
-MAX_WORKERS = 2
+MAX_WORKERS = 1
 
 # Campos del CSV de salida (orden fijo para escritura incremental coherente)
 CAMPOS_SALIDA = [
@@ -123,9 +123,12 @@ def extraer_datos_letterboxd(url):
         print(f"❌ Error extrayendo datos de {url} - {e}")
         return None
 
+def _clave(nombre, año):
+    """Identifica una película por título + año: así los remakes no se confunden."""
+    return ((nombre or "").strip(), (año or "").strip())
 
 def _cargar_titulos_existentes(salida_csv):
-    """Devuelve el set de 'Nombre original' ya presentes en el CSV de salida."""
+    """Devuelve el set de (título, año) de las películas ya presentes en el CSV de salida."""
     existentes = set()
     if not os.path.exists(salida_csv):
         return existentes
@@ -134,7 +137,7 @@ def _cargar_titulos_existentes(salida_csv):
             for row in csv.DictReader(f):
                 nombre = (row.get("Nombre original") or "").strip()
                 if nombre:
-                    existentes.add(nombre)
+                    existentes.add(_clave(nombre, row.get("Año original")))
     except Exception:
         pass
     return existentes
@@ -156,12 +159,18 @@ def elegir_csv_desde_directorio(directorio_entrada, directorio_salida):
     pendientes, completadas = [], []
     for archivo in archivos:
         ruta_csv = os.path.join(directorio_entrada, archivo)
-        num_lineas = quiz_utils.contar_lineas_csv(ruta_csv)
         nombre_base = os.path.splitext(archivo)[0]
         quiz_path = os.path.join(directorio_salida, f"{nombre_base}_quiz.csv")
-        ya_hechas = len(_cargar_titulos_existentes(quiz_path)) if os.path.exists(quiz_path) else 0
-        info = {"archivo": archivo, "total": num_lineas, "hechas": ya_hechas}
-        if num_lineas > 0 and ya_hechas >= num_lineas:
+
+        # Comparamos película a película (título + año) con lo ya extraído
+        with open(ruta_csv, 'r', encoding='utf-8') as f:
+            filas = list(csv.DictReader(f))
+        existentes = _cargar_titulos_existentes(quiz_path)
+        faltan = sum(1 for r in filas if _clave(r['Name'], r['Year']) not in existentes)
+
+        total = len(filas)
+        info = {"archivo": archivo, "total": total, "hechas": total - faltan}
+        if total > 0 and faltan == 0:
             completadas.append(info)
         else:
             pendientes.append(info)
@@ -235,7 +244,7 @@ def procesar_csv(nombre_archivo, carpeta_entrada="csv_lists", carpeta_salida="cs
     if existentes:
         print(f"♻️  Reanudando: {len(existentes)} películas ya extraídas se saltarán.")
 
-    pendientes = [r for r in rows if r['Name'].strip() not in existentes]
+    pendientes = [r for r in rows if _clave(r['Name'], r['Year']) not in existentes]
     if not pendientes:
         print("✅ Nada que hacer: todas las películas ya estaban extraídas.")
         return

@@ -4,8 +4,8 @@
  */
 
 const MAX_ERRORES = 3;
-const TIEMPO_NORMAL = 10;    // Segundos para responder la mayoría de preguntas
-const TIEMPO_SINOPSIS = 20;  // Segundos para las de sinopsis, que hay que leer
+const TIEMPO_NORMAL = 15;    // Segundos para responder la mayoría de preguntas
+const TIEMPO_SINOPSIS = 30;  // Segundos para las de sinopsis, que hay que leer
 const TOP_RECORDS = 3;       // Puestos del ranking (igual que MAX_POR_LISTA en el script de Google)
 const MEDALLAS = ['🥇', '🥈', '🥉'];
 

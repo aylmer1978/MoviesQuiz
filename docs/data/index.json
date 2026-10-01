@@ -2,7 +2,7 @@
   {
     "id": "lovecraft",
     "nombre": "LOVECRAFT",
-    "num_peliculas": 49,
+    "num_peliculas": 50,
     "dificultad": "🟢 FÁCIL",
     "descripcion": "Las adaptaciones cinematográficas del universo de H. P. Lovecraft.",
     "archivo": "data/lovecraft.json"
@@ -98,7 +98,7 @@
   {
     "id": "direct-to-video-horror-cinema",
     "nombre": "DIRECT TO VIDEO HORROR CINEMA",
-    "num_peliculas": 1516,
+    "num_peliculas": 1517,
     "dificultad": "⚫ EXTREMA",
     "descripcion": "",
     "archivo": "data/direct-to-video-horror-cinema.json"
