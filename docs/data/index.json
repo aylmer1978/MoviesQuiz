@@ -28,7 +28,7 @@
     "nombre": "VHS",
     "num_peliculas": 138,
     "dificultad": "🟡 MEDIA",
-    "descripcion": "",
+    "descripcion": "Una lista con aroma a la densa humedad del videoclub de tu barrio. Intenta recordar todas las películas que te sacaron de las drojas.",
     "archivo": "data/vhs.json"
   },
   {
@@ -62,6 +62,14 @@
     "dificultad": "🔴 DIFÍCIL",
     "descripcion": "Películas proyectas en el 57 SITGES FESTIVAL INTERNACIONAL DE CINE FANTÁSTICO DE CATALUNYA.",
     "archivo": "data/sitges-2024.json"
+  },
+  {
+    "id": "sitges-2025",
+    "nombre": "SITGES 2025",
+    "num_peliculas": 195,
+    "dificultad": "🔴 DIFÍCIL",
+    "descripcion": "Películas proyectas en el 58 SITGES FESTIVAL INTERNACIONAL DE CINE FANTÁSTICO DE CATALUNYA.",
+    "archivo": "data/sitges-2025.json"
   },
   {
     "id": "90s-horror",
@@ -100,7 +108,7 @@
     "nombre": "DIRECT TO VIDEO HORROR CINEMA",
     "num_peliculas": 1517,
     "dificultad": "⚫ EXTREMA",
-    "descripcion": "",
+    "descripcion": "¡La prueba definitiva de letterboxd! Intenta sacar la máxima puntuación en una lista repleta de clásicos absolutamente desconocidos del direct to video. Solo apto para kamikazes del tiempo libre.",
     "archivo": "data/direct-to-video-horror-cinema.json"
   }
 ]
