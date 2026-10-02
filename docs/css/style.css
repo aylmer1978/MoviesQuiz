@@ -166,3 +166,8 @@ body {
 .list-subtitle { font-size: 1rem; color: var(--accent); margin-bottom: 4px; }
 .list-ranking .ranking { max-width: none; margin-left: 0; }
 .list-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+
+/* Medallero global */
+.global-ranking { margin-bottom: 22px; }
+.global-ranking .ranking { max-width: none; margin: 8px 0 0; gap: 6px; }
+.global-ranking .ranking li { padding: 8px 14px; font-size: 0.95rem; }

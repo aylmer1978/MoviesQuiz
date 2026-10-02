@@ -8,6 +8,7 @@ const TIEMPO_NORMAL = 15;    // Segundos para responder la mayoría de preguntas
 const TIEMPO_SINOPSIS = 30;  // Segundos para las de sinopsis, que hay que leer
 const TOP_RECORDS = 3;       // Puestos del ranking (igual que MAX_POR_LISTA en el script de Google)
 const MEDALLAS = ['🥇', '🥈', '🥉'];
+const PUNTOS_MEDALLA = [3, 2, 1];   // Puntos de 🥇, 🥈 y 🥉 en el medallero global
 
 const estado = {
   catalogo: [],
@@ -70,12 +71,63 @@ async function renderCatalogo() {
       ? `🥇 ${top[0].nombre} · ${top[0].puntos}`
       : '✨ ¡Sé el primero!';
   }
+
+  // Cuando ya están todos los récords, dibujamos el medallero una sola vez
+  renderMedallero();
 }
 
 function escapar(s) {
   const d = document.createElement('div');
   d.textContent = s;
   return d.innerHTML;
+}
+
+// --- Medallero global ---
+async function calcularMedallero() {
+  // Un "diccionario" de jugadores: nombre normalizado → sus datos
+  const jugadores = {};
+
+  for (const quiz of estado.catalogo) {   // Solo listas públicas: las que hay en el menú
+    const top = await records.getTop(quiz.id);
+    const yaContados = new Set();          // Una sola medalla por jugador en cada lista
+
+    top.forEach((r, i) => {
+      const clave = r.nombre.trim().toLowerCase();   // "Guillermo" y "guillermo " cuentan igual
+      if (yaContados.has(clave)) return;              // Ya tiene un puesto mejor en esta lista
+      yaContados.add(clave);
+
+      if (!jugadores[clave]) {
+        jugadores[clave] = { nombre: r.nombre.trim(), puntos: 0, medallas: [0, 0, 0] };
+      }
+      jugadores[clave].puntos += PUNTOS_MEDALLA[i];
+      jugadores[clave].medallas[i]++;
+    });
+  }
+
+  // Ordenamos por puntos y, si empatan, por número de oros. Nos quedamos con 5.
+  return Object.values(jugadores)
+    .sort((a, b) => b.puntos - a.puntos || b.medallas[0] - a.medallas[0])
+    .slice(0, 5);
+}
+
+async function renderMedallero() {
+  const div = document.getElementById('globalRanking');
+  const top = await calcularMedallero();
+
+  if (!top.length) {
+    div.innerHTML = '<p class="ranking-vacio">Aún no hay medallas. ¡Estrena el ranking!</p>';
+    return;
+  }
+
+  const filas = top.map((j, i) => {
+    // Solo las medallas que tiene, con su número: "🥇2 🥈1"
+    const medallas = MEDALLAS
+      .map((m, k) => (j.medallas[k] ? `${m}${j.medallas[k]}` : ''))
+      .filter(Boolean)
+      .join(' ');
+    return `<li>${i + 1}. ${escapar(j.nombre)} · ${medallas} · ${j.puntos} pts</li>`;
+  });
+  div.innerHTML = `<ol class="ranking">${filas.join('')}</ol>`;
 }
 
 // --- Pantalla de lista ---
