@@ -10,5 +10,6 @@ lovecraft
 shudder-originals
 sitges-2024
 sitges-2025
+sitges-2026
 slasher
 vhs

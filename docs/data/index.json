@@ -44,7 +44,7 @@
     "nombre": "LATE 90S BEGINNING 2000 HORROR MOVIES",
     "num_peliculas": 181,
     "dificultad": "🔴 DIFÍCIL",
-    "descripcion": "",
+    "descripcion": "Otra lista con el cine de terror que podrías encontrar en el Blockbuster de tu barrio. La mejor época de la historia de la humanidad.",
     "archivo": "data/late-90s-beginning-2000-horror-movies.json"
   },
   {
@@ -80,11 +80,19 @@
     "archivo": "data/90s-horror.json"
   },
   {
+    "id": "sitges-2026",
+    "nombre": "SITGES 2026",
+    "num_peliculas": 228,
+    "dificultad": "🔴 DIFÍCIL",
+    "descripcion": "Películas proyectas en el 59 SITGES FESTIVAL INTERNACIONAL DE CINE FANTÁSTICO DE CATALUNYA.",
+    "archivo": "data/sitges-2026.json"
+  },
+  {
     "id": "slasher",
     "nombre": "SLASHER",
     "num_peliculas": 529,
     "dificultad": "⚫ EXTREMA",
-    "descripcion": "",
+    "descripcion": "Todo el slasher en una lista, con más películas que víctimas.",
     "archivo": "data/slasher.json"
   },
   {
@@ -92,7 +100,7 @@
     "nombre": "FOUND FOOTAGE",
     "num_peliculas": 538,
     "dificultad": "⚫ EXTREMA",
-    "descripcion": "",
+    "descripcion": "Porque el found footage no es solo Holocausto caníbal, El proyecto de la bruja de Blair o Paranormal Activity. Hay muuuuuuuuuuuuuuuuuchas más películas. Pero muchas.",
     "archivo": "data/found-footage.json"
   },
   {

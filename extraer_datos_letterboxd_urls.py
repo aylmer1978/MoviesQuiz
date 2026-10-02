@@ -13,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import quiz_utils
 
 # Nº de descargas simultáneas. Más alto = más rápido pero más riesgo de bloqueo.
-MAX_WORKERS = 1
+MAX_WORKERS = 2
 
 # Campos del CSV de salida (orden fijo para escritura incremental coherente)
 CAMPOS_SALIDA = [
