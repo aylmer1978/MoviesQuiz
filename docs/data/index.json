@@ -88,6 +88,14 @@
     "archivo": "data/sitges-2026.json"
   },
   {
+    "id": "kaiju",
+    "nombre": "KAIJU",
+    "num_peliculas": 404,
+    "dificultad": "⚫ EXTREMA",
+    "descripcion": "Una lista aún más temible que los personajes que la conforman.",
+    "archivo": "data/kaiju.json"
+  },
+  {
     "id": "slasher",
     "nombre": "SLASHER",
     "num_peliculas": 529,
