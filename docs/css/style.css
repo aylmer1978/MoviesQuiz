@@ -130,6 +130,7 @@ body {
 }
 .btn-primary:active { transform: scale(0.97); }
 .btn-primary:hover { filter: brightness(1.08); }
+.btn-primary:disabled { opacity: 0.4; cursor: default; filter: none; }
 .btn-ghost {
   background: transparent; color: var(--text-dim); border: none; font-size: 0.95rem; cursor: pointer; padding: 6px;
 }

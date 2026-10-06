@@ -6,7 +6,7 @@
 const MAX_ERRORES = 3;
 const TIEMPO_NORMAL = 15;    // Segundos para responder la mayoría de preguntas
 const TIEMPO_SINOPSIS = 30;  // Segundos para las de sinopsis, que hay que leer
-const TOP_RECORDS = 3;       // Puestos del ranking (igual que MAX_POR_LISTA en el script de Google)
+const TOP_RECORDS = 5;       // Puestos del ranking (igual que MAX_POR_LISTA en el script de Google)
 const MEDALLAS = ['🥇', '🥈', '🥉'];
 const PUNTOS_MEDALLA = [3, 2, 1];   // Puntos de 🥇, 🥈 y 🥉 en el medallero global
 
@@ -92,6 +92,7 @@ async function calcularMedallero() {
     const yaContados = new Set();          // Una sola medalla por jugador en cada lista
 
     top.forEach((r, i) => {
+      if (i >= MEDALLAS.length) return;   // Puestos 4.º y 5.º: de momento no suman en el global
       const clave = r.nombre.trim().toLowerCase();   // "Guillermo" y "guillermo " cuentan igual
       if (yaContados.has(clave)) return;              // Ya tiene un puesto mejor en esta lista
       yaContados.add(clave);
@@ -303,7 +304,7 @@ function tiempoAgotado() {
 function htmlRanking(top) {
   // Convierte [{nombre, puntos}, ...] en una lista HTML con medallas
   if (!top.length) return '<p class="ranking-vacio">Aún no hay récords en esta lista.</p>';
-  const filas = top.map((r, i) => `<li>${MEDALLAS[i] || ''} ${escapar(r.nombre)} · ${r.puntos} pts</li>`);
+  const filas = top.map((r, i) => `<li>${MEDALLAS[i] || `${i + 1}.`} ${escapar(r.nombre)} · ${r.puntos} pts</li>`);
   return `<ol class="ranking">${filas.join('')}</ol>`;
 }
 
@@ -331,6 +332,7 @@ async function finalizar() {
   if (entraEnTop) {
     recordDiv.innerHTML = `🏆 <strong>¡Entras en el top ${TOP_RECORDS}!</strong>` + htmlRanking(top);
     document.getElementById('nameInput').value = '';
+    document.getElementById('btnSaveRecord').disabled = true;   // Sin nombre no se puede guardar
     nameEntry.hidden = false;
   } else {
     recordDiv.innerHTML = htmlRanking(top);
@@ -358,19 +360,27 @@ document.getElementById('btnBack').addEventListener('click', () => {
 });
 document.getElementById('btnPlayAgain').addEventListener('click', () => mostrarLista(estado.quizActual));
 document.getElementById('btnSaveRecord').addEventListener('click', async () => {
-  const btn = document.getElementById('btnSaveRecord');
   const recordDiv = document.getElementById('endRecord');
-  const nombre = document.getElementById('nameInput').value;
+  const nombre = document.getElementById('nameInput').value.trim();
+  if (!nombre) return;   // Por si acaso: sin nombre no se guarda
 
-  btn.disabled = true;                   // Evita guardar dos veces con un doble toque
+  // Ocultamos el formulario al primer toque: así es imposible guardar dos veces
+  document.getElementById('nameEntry').hidden = true;
   recordDiv.textContent = 'Guardando…';
 
   const ok = await records.save(estado.quizActual.id, nombre, estado.aciertos);
   const top = await records.getTop(estado.quizActual.id);   // Ranking ya actualizado
-
-  document.getElementById('nameEntry').hidden = true;
   recordDiv.innerHTML = (ok ? '✅ ¡Récord guardado!' : '⚠️ No se pudo confirmar el guardado') + htmlRanking(top);
-  btn.disabled = false;
+});
+
+// El botón de guardar solo se activa cuando hay un nombre escrito
+document.getElementById('nameInput').addEventListener('input', (e) => {
+  document.getElementById('btnSaveRecord').disabled = !e.target.value.trim();
+});
+
+// Intro (o "Ir" en el móvil) también guarda
+document.getElementById('nameInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('btnSaveRecord').click();
 });
 
 // Arranque
