@@ -88,6 +88,14 @@
     "archivo": "data/sitges-2026.json"
   },
   {
+    "id": "giallo",
+    "nombre": "GIALLO",
+    "num_peliculas": 237,
+    "dificultad": "🔴 DIFÍCIL",
+    "descripcion": "Sangrientos crímenes a ritmo de jazz y muchos guantes de cuero. Una lista que enamora al mismo Mario Bava.",
+    "archivo": "data/giallo.json"
+  },
+  {
     "id": "kaiju",
     "nombre": "KAIJU",
     "num_peliculas": 404,
